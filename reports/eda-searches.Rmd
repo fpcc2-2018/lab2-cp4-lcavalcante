@@ -24,3 +24,28 @@ buscas %>%
     geom_histogram(binwidth = 5) 
 ```
 
+```{r}
+buscas %>% 
+    filter(results <= 25) %>%
+    ggplot(aes(x = group, y = results)) + 
+    geom_violin()  #+
+    #geom_boxplot() # +
+    #geom_jitter(alpha = .4, width = .1, size = .6)
+    #scale_y_log10()
+```
+
+
+```{r}
+buscas %>% 
+    filter(results > 25) %>%
+    ggplot(aes(x = group, y = results)) + 
+    geom_violin() # +
+    #geom_boxplot() # +
+    #geom_jitter(alpha = .4, width = .1, size = .6)
+    #scale_y_log10()
+```
+
+
+```{r}
+buscas 
+```
