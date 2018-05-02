@@ -1,6 +1,8 @@
 ---
 title: "EDA buscas"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 O objeto principal da análise são as buscas e a navegação depois da busca. Criamos esses dados a partir dos dados originais da wikimedia em `/data/search_data.csv`. 
@@ -21,6 +23,138 @@ buscas = read_csv(here::here("data/search_data.csv"))
 ```{r}
 buscas %>% 
     ggplot(aes(x = results)) + 
-    geom_histogram(binwidth = 5) 
+    geom_histogram(binwidth = 10)
 ```
 
+# 1 - What is our daily overall clickthrough rate? How does it vary between the groups?
+
+## Clickthrough = pesquisas que tiveram cliques / pesquisas
+
+
+```{r}
+buscas %>%
+    mutate(clicked = (is.na(first_click))) %>%
+    ggplot(aes(x = "clickthrough")) + 
+    geom_bar(aes(fill = clicked)) 
+```
+
+Boa parte das sessoes de busca tiveram cliques
+
+```{r}
+buscas %>%
+    mutate(clicked = (is.na(first_click))) %>%
+    ggplot(aes(x = group)) + 
+    geom_bar(aes(fill = clicked)) 
+```
+
+Podemos observcar que há uma pequena diferença nas porporcoes de buscas com cliques
+
+```{r}
+buscas %>%
+     mutate(clicked = (is.na(first_click))) %>%
+    summarise(num_clicked  = sum(clicked) / nrow((buscas))) 
+```
+
+```{r}
+b <- buscas %>%
+    filter(group == 'b') 
+
+b %>%
+    mutate(clicked = (is.na(first_click))) %>%
+    summarise(num_clicked  = sum(clicked) / nrow((b))) 
+```
+```{r}
+a <- buscas %>%
+    filter(group == 'a')
+
+a %>%
+    mutate(clicked = (is.na(first_click))) %>%
+    summarise(num_clicked  = sum(clicked) / nrow((a))) 
+```
+
+### Pode se observar que a proporção de buscas com clique é de 75%, porém o grupo b tem 85% e o grupo a 71%
+
+# 2 - Which results do people tend to try first? How does it change day-to-day?
+
+```{r}
+buscas %>%
+    filter(!is.na(first_click)) %>%
+    mutate(date = round_date(session_start_date, unit = "day")) %>% 
+    ggplot(aes(x=date, y=first_click, col = date, group=date)) +
+    geom_boxplot() +
+    scale_y_log10() +
+      facet_grid(group ~ .) 
+```
+
+Podemos observcar que as medianas são iguais nos dias, porém a distribuicao dos grupos se diferencia no que se remete ao percentis maiores
+
+```{r}
+a_not_na <- buscas %>%
+        filter(group == 'a') %>%
+
+    filter(!is.na(first_click)) %>%
+    mutate(date = round_date(session_start_date, unit = "day"))
+
+first_a <- a_not_na$first_click
+
+quantile(first_a, c(.50, .75, .95, .99))
+```
+```{r}
+b_not_na <- buscas %>%
+        filter(group == 'b') %>%
+
+    filter(!is.na(first_click)) %>%
+    mutate(date = round_date(session_start_date, unit = "day"))
+
+first_b <- b_not_na$first_click
+
+quantile(first_b, c(.50, .75, .95, .99))
+
+```
+
+### Observa-se que o resultado que as pessoas clicam primeiro é o primeiro resultado, e isso varia muito pouco ao decorrer dos dias, porém o grupo B tem um número mais baixo de piores resultados, como podemos observar nos percentis 95 e 99
+
+# What is our daily overall zero results rate? How does it vary between the groups?
+
+```{r}
+buscas %>%
+    mutate(zero_results = (results == 0)) %>%
+    ggplot(aes(x = "zero_results")) + 
+    geom_bar(aes(fill = zero_results)) 
+```
+
+# Observa-se uma taxa por volta de 20% de buscas sem resultado
+
+
+
+
+```{r}
+buscas %>%
+    mutate(zero_results = (results == 0)) %>%
+    ggplot(aes(x = group)) + 
+    geom_bar(aes(fill = zero_results)) 
+```
+
+A proporção parece ser mantida quando observamos cada grupo
+
+```{r}
+buscas %>%
+    mutate(zero_results = (results == 0)) %>%
+    summarise(num_clicked  = sum(zero_results) / nrow((buscas))) 
+```
+
+```{r}
+a %>%
+     mutate(zero_results = (results == 0)) %>%
+    summarise(num_clicked  = sum(zero_results) / nrow((a))) 
+   
+```
+```{r}
+b %>%
+     mutate(zero_results = (results == 0)) %>%
+    summarise(num_clicked  = sum(zero_results) / nrow((b))) 
+   
+```
+
+
+### Pode-se observar que a proporção de pesquisas que geram 0 resultados se mantem entre os grupos

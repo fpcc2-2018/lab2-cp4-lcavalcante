@@ -10,13 +10,16 @@ Como usamos dados derivados dos logs de eventos da wikimedia, aqui primeiro expl
 ```{r}
 library(tidyverse)
 library(lubridate)
+library(here)
+
+
 theme_set(theme_bw())
 ```
 
 ## Lendo os eventos
 
 ```{r ETL}
-events = read_csv("https://github.com/wikimedia-research/Discovery-Hiring-Analyst-2016/raw/master/events_log.csv.gz")
+events = read_csv(here::here("data/events_log.csv"))
 
 events = events %>% slice(1:5e4) # Útil para testar código em dados pequenos. Comente na hora de processá-los para valer.
 
@@ -26,6 +29,14 @@ events = events %>%
     mutate(search_index = cumsum(action == "searchResultPage"), # contador de buscas na sessão.
            date = ymd_hms(timestamp))  %>% 
     ungroup()
+```
+
+
+
+```{r}
+events %>% 
+    ggplot(aes(group)) + 
+    geom_bar(aes(fill = action))
 ```
 
 ## No tempo
@@ -39,6 +50,98 @@ events %>%
     geom_area()
 ```
 
-## Por tipo
 
-## Etc.
+```{r}
+events %>% 
+    filter(action == "visitPage") %>%
+    mutate(date = round_date(date, unit = "day")) %>% 
+    count(date, group) %>% 
+    ggplot(aes(x = date, y = n, fill = group)) + 
+    geom_area()
+```
+```{r}
+events %>% 
+    filter(action == "visitPage") %>%
+    mutate(date = round_date(date, unit = "day")) %>% 
+    count(date, group) %>% 
+    ggplot(aes(x = group, y = n)) + 
+    geom_boxplot()
+```
+
+```{r}
+events %>% 
+    filter(action == "visitPage") %>%
+    mutate(date = round_date(date, unit = "day")) %>% 
+    group_by(group) %>%
+    count(date, group) %>% 
+    summarise(median  = median(n))
+```
+
+```{r}
+events %>% 
+    filter(action == "searchResultPage") %>%
+    filter(n_results == 0) %>%
+    mutate(date = round_date(date, unit = "day")) %>% 
+    count(date, group) %>% 
+    ggplot(aes(x = date, y = n, fill = group)) + 
+    geom_area()
+```
+
+```{r}
+events %>% 
+    filter(action == "searchResultPage") %>%
+    ggplot(aes(group)) + 
+    geom_bar(aes(fill = "green"))
+```
+
+##Porcentagens?
+
+
+```{r}
+events %>% 
+    filter(action == "searchResultPage") %>%
+    filter(n_results == 0) %>%
+    ggplot(aes(group)) + 
+    geom_bar(aes(fill = action))
+```
+
+```{r}
+events %>% 
+    filter(action == "searchResultPage") %>%
+    mutate(date = round_date(date, unit = "day")) %>% 
+    group_by(group) %>%
+    count(date, group) %>% 
+    summarise(median  = median(n))
+```
+
+```{r}
+events %>% 
+    filter(action == "searchResultPage") %>%
+    filter(n_results == 0) %>%
+    mutate(date = round_date(date, unit = "day")) %>% 
+    group_by(group) %>%
+    count(date, group) %>% 
+    summarise(median  = median(n))
+```
+
+```{r}
+events %>% 
+    filter(action == "visitPage") %>%
+    filter(!is.na(result_position)) %>%
+    mutate(date = round_date(date, unit = "day")) %>% 
+    ggplot(aes(x=date, y=result_position, col = date)) + 
+    geom_point() +
+    geom_jitter()  + 
+      facet_grid(group ~ .) 
+
+```
+
+
+```{r}
+events %>% 
+   filter(action == "visitPage") %>%
+    filter(!is.na(result_position)) %>%
+    mutate(date = round_date(date, unit = "day")) %>% 
+    group_by(group) %>%
+    summarise(median  = median(result_position))
+```
