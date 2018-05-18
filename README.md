@@ -1,5 +1,6 @@
 # Link RPUBS :
-http://rpubs.com/lcavalcante/at2p4fpcc
+lab2: http://rpubs.com/lcavalcante/at2p4fpcc
+lab3: http://rpubs.com/lcavalcante/lab3cp1
 
 # Sessões, buscas e navegação na wikimedia
 
